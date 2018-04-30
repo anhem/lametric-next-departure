@@ -4,8 +4,10 @@ Backend for LaMetric app Next-Departure that fetches departure information for s
 
 ### App configuration
 
+https://apps.lametric.com/apps/next-departure/6200
+
 Here is a short explanation of the different configuration options required by the LaMetric app. 
-Furhter explanations of these can be found at https://www.trafiklab.se/node/15754/documentation
+Further explanations of these can be found at https://www.trafiklab.se/node/15754/documentation
 
 * site-id = Unique identification number for the stop or station of interest
 * transport-mode = which transportation mode to fetch information for
@@ -20,5 +22,5 @@ use `npm start` to start in development mode
 
 example once backend is started:
 ```
-localhost:3000/next?site-id=1080&transport-mode=train&journey-direction=1&skip-minutes=10
+http://localhost:3000/next?site-id=1080&transport-mode=train&journey-direction=1&skip-minutes=10
 ```
