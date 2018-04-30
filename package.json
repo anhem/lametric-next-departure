@@ -1,0 +1,26 @@
+{
+  "name": "next-departure",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "4.16.3",
+    "isomorphic-fetch": "2.2.1",
+    "memory-cache": "0.2.0",
+    "moment": "2.22.1",
+    "moment-timezone": "0.5.16"
+  },
+  "devDependencies": {
+    "babel-cli": "6.26.0",
+    "babel-preset-env": "1.6.1",
+    "nodemon": "1.17.3"
+  },
+  "scripts": {
+    "babel-node": "babel-node --presets=env",
+    "start": "nodemon --exec npm run babel-node -- ./server/app.js",
+    "build": "babel server -d dist"
+  },
+  "babel": {
+    "presets": [
+      "env"
+    ]
+  }
+}
