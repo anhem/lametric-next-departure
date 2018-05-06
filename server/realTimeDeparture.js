@@ -9,7 +9,6 @@ const BASE_URL = 'http://api.sl.se/api2/realtimedeparturesV4.json?key=' + REAL_T
 const TIME_WINDOW = 60;
 const TEN_MINUTES = 600000;
 const THIRTY_MINUTES = 1800000;
-const FIFTY_MINUTES = 3000000;
 const TZ_STOCKHOLM = 'Europe/Stockholm';
 const TIME_FORMAT = 'hh:mm:ss';
 
@@ -122,15 +121,8 @@ const getCacheTime = () => {
         console.log('10 minutes cache time');
         return TEN_MINUTES;
     }
-
-    from = moment.tz(moment('04:00:00', TIME_FORMAT), TZ_STOCKHOLM);
-    to = moment.tz(moment('5:00:00', TIME_FORMAT), TZ_STOCKHOLM);
-    if (currentTime.isBetween(from, to)) {
-        console.log('30 minutes cache time');
-        return THIRTY_MINUTES
-    }
-    console.log('59 minutes cache time');
-    return FIFTY_MINUTES;
+    console.log('30 minutes cache time');
+    return THIRTY_MINUTES;
 };
 
 export default RealTimeDeparture
