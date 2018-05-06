@@ -31,7 +31,7 @@ RealTimeDeparturecontroller.getNextDeparture = (req, res) => {
             res.send(error);
         });
     } else {
-        res.send(laMetric.createError('arguments missing: ' + JSON.stringify(query), query.transportMode));
+        res.send(laMetric.createError('Argument saknas: ' + JSON.stringify(query), query.transportMode));
     }
 };
 

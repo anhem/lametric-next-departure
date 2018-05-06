@@ -13,18 +13,29 @@ const TZ_STOCKHOLM = 'Europe/Stockholm';
 const TIME_FORMAT = 'hh:mm:ss';
 
 const RealTimeDeparture = {};
+const departureCache = new cache.Cache();
+const thresholdCache = new cache.Cache();
 
 RealTimeDeparture.execute = (query) => {
     return new Promise((resolve, reject) => {
-        const cachedJson = cache.get(query.getCacheKey());
+        const cachedJson = departureCache.get(query.getCacheKey());
         if (cachedJson !== null) {
             console.log('Found cached response for key: ' + query.getCacheKey());
-            findTimeTilNextDeparture(cachedJson, query).then(nextDepartureTime => {
-                resolve(laMetric.createResponse(nextDepartureTime, query.transportMode));
+            findTimeTilNextDeparture(cachedJson, query).then(response => {
+                resolve(laMetric.createResponse(response, query.transportMode));
             }, error => {
-                console.log('Failed to parse cached data. Setting TTL on cached data to ' + TEN_MINUTES + '.', error);
-                cache.put(query.getCacheKey(), cachedJson, TEN_MINUTES);
-                reject(laMetric.createError(error, query.transportMode));
+                if (thresholdCache.get(query.getCacheKey()) === null) {
+                    thresholdCache.put(query.getCacheKey(), 1, THIRTY_MINUTES);
+                    console.log('Failed to parse cached data, fetching new data');
+                    queryRealTimeDeparturesApi(query).then(response => {
+                        resolve(laMetric.createResponse(response, query.transportMode));
+                    }, error => {
+                        reject(laMetric.createError(error, query.transportMode));
+                    })
+                } else {
+                    console.log('Failed to parse cached data and threshold reached');
+                    reject(laMetric.createError(error, query.transportMode));
+                }
             });
         } else {
             queryRealTimeDeparturesApi(query).then(response => {
@@ -40,7 +51,7 @@ function queryRealTimeDeparturesApi(query) {
     return new Promise((resolve, reject) => {
         restClient.get(createRequest(query.siteId))
             .then(json => {
-                cache.put(query.getCacheKey(), json, getCacheTime());
+                departureCache.put(query.getCacheKey(), json, getCacheTime());
                 findTimeTilNextDeparture(json, query).then(nextDepartureTime => {
                     resolve(nextDepartureTime);
                 }, error => {
@@ -48,27 +59,25 @@ function queryRealTimeDeparturesApi(query) {
                 })
             }, error => {
                 console.log(error);
-                reject('Error: Failed to fetch departure data');
+                reject('Misslyckades att hämta information från SL');
             });
     })
 }
 
 const findTimeTilNextDeparture = (json, query) => {
     return new Promise((resolve, reject) => {
-        try {
-            const transportModeResponseData = getTransportModeResponseData(json.ResponseData, query.transportMode);
+        const transportModeResponseData = getTransportModeResponseData(json.ResponseData, query.transportMode);
+        if (transportModeResponseData.length > 0) {
             const nextDeparture = findNextDeparture(transportModeResponseData, query);
             if (nextDeparture) {
-                resolve(calculateMinutesLeft(nextDeparture.ExpectedDateTime));
+                resolve(calculateMinutesLeft(nextDeparture.ExpectedDateTime) + " min");
             } else {
-                resolve('?');
+                reject("inga avgångar funna");
             }
-        } catch (e) {
-            console.log(e);
-            reject('Error: Failed to parse response from SL');
+        } else {
+            reject("inga avgångar funna för valt färdmedel");
         }
     })
-
 };
 
 const createRequest = (siteId) => {
@@ -122,8 +131,8 @@ const getTransportModeResponseData = (responseData, transportMode) => {
 
 const getCacheTime = () => {
     const currentTime = moment.tz(moment(), TZ_STOCKHOLM);
-    let from = moment.tz(moment('05:00:00', TIME_FORMAT), TZ_STOCKHOLM);
-    let to = moment.tz(moment('10:00:00', TIME_FORMAT), TZ_STOCKHOLM);
+    const from = moment.tz(moment('05:00:00', TIME_FORMAT), TZ_STOCKHOLM);
+    const to = moment.tz(moment('10:00:00', TIME_FORMAT), TZ_STOCKHOLM);
     if (currentTime.isBetween(from, to)) {
         console.log('10 minutes cache time');
         return TEN_MINUTES;

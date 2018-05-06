@@ -7,13 +7,7 @@ const SHIP_ICON = 'a16309';
 const MESSAGE_DURATION = 10000;
 const ERROR_MESSAGE_DURATION = 15000;
 
-laMetric.createResponse = (minutesLeft, transportMode) => {
-    let message;
-    if (minutesLeft === '?') {
-        message = "Ingen avgång i närtid"
-    } else {
-        message = minutesLeft + " min"
-    }
+laMetric.createResponse = (message, transportMode) => {
     const response = {
         frames: [
             {
