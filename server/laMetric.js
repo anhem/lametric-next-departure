@@ -10,7 +10,7 @@ const ERROR_MESSAGE_DURATION = 15000;
 laMetric.createResponse = (minutesLeft, transportMode) => {
     let message;
     if (minutesLeft === '?') {
-        message = "Ingen anvgång i närtid"
+        message = "Ingen avgång i närtid"
     } else {
         message = minutesLeft + " min"
     }
