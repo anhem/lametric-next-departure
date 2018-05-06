@@ -13,6 +13,7 @@ Further explanations of these can be found at https://www.trafiklab.se/node/1575
 * transport-mode = which transportation mode to fetch information for
 * journey-direction = Direction of journey, either 1 or 2
 * skip-minutes = next departure to skip because it will depart before one can get to the stop or station
+* line-numbers (optional) = Comma (,) separated list of line numbers that next departure should be displayed for 
 
 ### Development
 
