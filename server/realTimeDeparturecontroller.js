@@ -26,6 +26,8 @@ RealTimeDeparturecontroller.getNextDeparture = (req, res) => {
     if (query.isValid()) {
         RealTimeDeparture.execute(query).then(response => {
             res.send(response);
+        }, error => {
+            res.send(error);
         });
     } else {
         res.send(laMetric.createError('arguments missing: ' + JSON.stringify(query), query.transportMode));

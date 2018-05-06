@@ -8,10 +8,16 @@ const MESSAGE_DURATION = 10000;
 const ERROR_MESSAGE_DURATION = 15000;
 
 laMetric.createResponse = (minutesLeft, transportMode) => {
+    let message;
+    if (minutesLeft === '?') {
+        message = "Ingen anvgång i närtid"
+    } else {
+        message = minutesLeft + " min"
+    }
     const response = {
         frames: [
             {
-                text: minutesLeft + " min",
+                text: message,
                 icon: getIcon(transportMode),
                 index: 0,
                 duration: MESSAGE_DURATION

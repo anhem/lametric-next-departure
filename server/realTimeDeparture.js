@@ -8,6 +8,10 @@ const REAL_TIME_DEPARTURES_V4_KEY = process.env.REAL_TIME_DEPARTURES_V4_KEY;
 const BASE_URL = 'http://api.sl.se/api2/realtimedeparturesV4.json?key=' + REAL_TIME_DEPARTURES_V4_KEY;
 const TIME_WINDOW = 60;
 const TEN_MINUTES = 600000;
+const THIRTY_MINUTES = 1800000;
+const FIFTY_MINUTES = 3000000;
+const TZ_STOCKHOLM = 'Europe/Stockholm';
+const TIME_FORMAT = 'hh:mm:ss';
 
 const RealTimeDeparture = {};
 
@@ -16,30 +20,56 @@ RealTimeDeparture.execute = (query) => {
         const cachedJson = cache.get(query.getCacheKey());
         if (cachedJson !== null) {
             console.log('Found cached response for key: ' + query.getCacheKey());
-            resolve(parseResponse(cachedJson, query.transportMode, query.journeyDirection, query.skipMinutes));
+            findTimeTilNextDeparture(cachedJson, query.transportMode, query.journeyDirection, query.skipMinutes).then(nextDepartureTime => {
+                resolve(laMetric.createResponse(nextDepartureTime, query.transportMode));
+            }, error => {
+                console.log('Failed to parse cached data. Setting TTL on cached data to ' + TEN_MINUTES + '.', error);
+                cache.put(query.getCacheKey(), cachedJson, TEN_MINUTES);
+                reject(laMetric.createError(error, query.transportMode));
+            });
         } else {
-            restClient.get(createRequest(query.siteId))
-                .then(json => {
-                    cache.put(query.getCacheKey(), json, TEN_MINUTES);
-                    resolve(parseResponse(json, query.transportMode, query.journeyDirection, query.skipMinutes));
-                }, error => {
-                    reject(laMetric.createError('Error: ' + JSON.stringify(error), query.transportMode));
-                });
+            queryRealTimeDeparturesApi(query).then(response => {
+                resolve(laMetric.createResponse(response, query.transportMode));
+            }, error => {
+                reject(laMetric.createError(error, query.transportMode));
+            })
         }
     })
 };
 
-const parseResponse = (json, transportMode, journeyDirection, skipMinutes) => {
-    try {
-        const transportModeResponseData = getTransportModeResponseData(json.ResponseData, transportMode);
-        const nextDeparture = findNextDeparture(transportModeResponseData, journeyDirection, skipMinutes);
-        const minutesLeft = calculateMinutesLeft(nextDeparture.ExpectedDateTime);
+function queryRealTimeDeparturesApi(query) {
+    return new Promise((resolve, reject) => {
+        restClient.get(createRequest(query.siteId))
+            .then(json => {
+                cache.put(query.getCacheKey(), json, getCacheTime());
+                findTimeTilNextDeparture(json, query.transportMode, query.journeyDirection, query.skipMinutes).then(nextDepartureTime => {
+                    resolve(nextDepartureTime);
+                }, error => {
+                    reject(error);
+                })
+            }, error => {
+                console.log(error);
+                reject('Error: Failed to fetch departure data');
+            });
+    })
+}
 
-        return laMetric.createResponse(minutesLeft, transportMode);
-    } catch (e) {
-        console.log(e);
-        return laMetric.createError('Error: Failed to parse response', transportMode);
-    }
+const findTimeTilNextDeparture = (json, transportMode, journeyDirection, skipMinutes) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const transportModeResponseData = getTransportModeResponseData(json.ResponseData, transportMode);
+            const nextDeparture = findNextDeparture(transportModeResponseData, journeyDirection, skipMinutes);
+            if (nextDeparture) {
+                resolve(calculateMinutesLeft(nextDeparture.ExpectedDateTime));
+            } else {
+                resolve('?');
+            }
+        } catch (e) {
+            console.log(e);
+            reject('Error: Failed to parse response from SL');
+        }
+    })
+
 };
 
 const createRequest = (siteId) => {
@@ -49,7 +79,7 @@ const createRequest = (siteId) => {
 };
 
 const calculateMinutesLeft = (expectedDepartureTime) => {
-    const expectedDeparture = moment.tz(expectedDepartureTime, 'Europe/Stockholm');
+    const expectedDeparture = moment.tz(expectedDepartureTime, TZ_STOCKHOLM);
     const now = moment();
     const calc = moment.duration(expectedDeparture.diff(now));
     return calc.minutes();
@@ -82,6 +112,25 @@ const getTransportModeResponseData = (responseData, transportMode) => {
         default:
             return [];
     }
+};
+
+const getCacheTime = () => {
+    const currentTime = moment.tz(moment(), TZ_STOCKHOLM);
+    let from = moment.tz(moment('05:00:00', TIME_FORMAT), TZ_STOCKHOLM);
+    let to = moment.tz(moment('10:00:00', TIME_FORMAT), TZ_STOCKHOLM);
+    if (currentTime.isBetween(from, to)) {
+        console.log('10 minutes cache time');
+        return TEN_MINUTES;
+    }
+
+    from = moment.tz(moment('04:00:00', TIME_FORMAT), TZ_STOCKHOLM);
+    to = moment.tz(moment('5:00:00', TIME_FORMAT), TZ_STOCKHOLM);
+    if (currentTime.isBetween(from, to)) {
+        console.log('30 minutes cache time');
+        return THIRTY_MINUTES
+    }
+    console.log('59 minutes cache time');
+    return FIFTY_MINUTES;
 };
 
 export default RealTimeDeparture
