@@ -19,7 +19,7 @@ RealTimeDeparture.execute = (query) => {
         const cachedJson = cache.get(query.getCacheKey());
         if (cachedJson !== null) {
             console.log('Found cached response for key: ' + query.getCacheKey());
-            findTimeTilNextDeparture(cachedJson, query.transportMode, query.journeyDirection, query.skipMinutes).then(nextDepartureTime => {
+            findTimeTilNextDeparture(cachedJson, query).then(nextDepartureTime => {
                 resolve(laMetric.createResponse(nextDepartureTime, query.transportMode));
             }, error => {
                 console.log('Failed to parse cached data. Setting TTL on cached data to ' + TEN_MINUTES + '.', error);
@@ -41,7 +41,7 @@ function queryRealTimeDeparturesApi(query) {
         restClient.get(createRequest(query.siteId))
             .then(json => {
                 cache.put(query.getCacheKey(), json, getCacheTime());
-                findTimeTilNextDeparture(json, query.transportMode, query.journeyDirection, query.skipMinutes).then(nextDepartureTime => {
+                findTimeTilNextDeparture(json, query).then(nextDepartureTime => {
                     resolve(nextDepartureTime);
                 }, error => {
                     reject(error);
@@ -53,11 +53,11 @@ function queryRealTimeDeparturesApi(query) {
     })
 }
 
-const findTimeTilNextDeparture = (json, transportMode, journeyDirection, skipMinutes) => {
+const findTimeTilNextDeparture = (json, query) => {
     return new Promise((resolve, reject) => {
         try {
-            const transportModeResponseData = getTransportModeResponseData(json.ResponseData, transportMode);
-            const nextDeparture = findNextDeparture(transportModeResponseData, journeyDirection, skipMinutes);
+            const transportModeResponseData = getTransportModeResponseData(json.ResponseData, query.transportMode);
+            const nextDeparture = findNextDeparture(transportModeResponseData, query);
             if (nextDeparture) {
                 resolve(calculateMinutesLeft(nextDeparture.ExpectedDateTime));
             } else {
@@ -84,13 +84,22 @@ const calculateMinutesLeft = (expectedDepartureTime) => {
     return calc.minutes();
 };
 
-const findNextDeparture = (responseData, journeyDirection, skipMinutes) => {
-    return responseData.sort((a, b) => {
+const findNextDeparture = (responseData, query) => {
+    console.log(query);
+    let departures = responseData;
+
+    if (query.lineNumbers.length > 0) {
+        departures = responseData.filter(item => {
+            return (query.lineNumbers.indexOf(item.LineNumber.toLowerCase()) > -1)
+        });
+    }
+
+    return departures.sort((a, b) => {
         return moment(a.ExpectedDateTime) - moment(b.ExpectedDateTime);
     }).find((item) => {
-        if (item.JourneyDirection === journeyDirection) {
+        if (item.JourneyDirection === query.journeyDirection) {
             const minutesLeft = calculateMinutesLeft(item.ExpectedDateTime);
-            return minutesLeft >= skipMinutes;
+            return minutesLeft >= query.skipMinutes;
         }
         return false;
     });

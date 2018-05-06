@@ -9,6 +9,7 @@ const parseRequest = (req) => {
         transportMode: req.query['transport-mode'],
         journeyDirection: parseInt(req.query['journey-direction']),
         skipMinutes: parseInt(req.query['skip-minutes']),
+        lineNumbers: req.query['line-numbers'] ? req.query['line-numbers'].toLowerCase().split(',') : [],
 
         isValid: function () {
             return this.siteId && this.transportMode && this.journeyDirection;
