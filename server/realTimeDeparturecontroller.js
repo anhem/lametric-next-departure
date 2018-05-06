@@ -1,14 +1,10 @@
-import cache from "memory-cache";
-import restClient from './restClient';
 import RealTimeDeparture from './realTimeDeparture'
 import laMetric from "./laMetric";
 
 const RealTimeDeparturecontroller = {};
 
-const TEN_MINUTES = 600000;
-
-RealTimeDeparturecontroller.getNextDeparture = (req, res) => {
-    const query = {
+const parseRequest = (req) => {
+    return {
         siteId: parseInt(req.query['site-id']),
         transportMode: req.query['transport-mode'],
         journeyDirection: parseInt(req.query['journey-direction']),
@@ -21,25 +17,18 @@ RealTimeDeparturecontroller.getNextDeparture = (req, res) => {
             return this.siteId;
         }
     };
+};
+
+RealTimeDeparturecontroller.getNextDeparture = (req, res) => {
+    const query = parseRequest(req);
     console.log('query: ' + JSON.stringify(query));
 
-    if (!query.isValid()) {
-        res.send(laMetric.createError('arguments missing: ' + JSON.stringify(query), query.transportMode));
-        return;
-    }
-
-    const cachedJson = cache.get(query.getCacheKey());
-    if (cachedJson !== null) {
-        console.log('Found cached response for key: ' + query.getCacheKey());
-        res.send(RealTimeDeparture.parseResponse(cachedJson, query.transportMode, query.journeyDirection, query.skipMinutes))
+    if (query.isValid()) {
+        RealTimeDeparture.execute(query).then(response => {
+            res.send(response);
+        });
     } else {
-        restClient.get(RealTimeDeparture.createRequest(query.siteId))
-            .then(json => {
-                cache.put(query.getCacheKey(), json, TEN_MINUTES);
-                res.send(RealTimeDeparture.parseResponse(json, query.transportMode, query.journeyDirection, query.skipMinutes))
-            }, error => {
-                res.send(laMetric.createError('Error: ' + JSON.stringify(error), query.transportMode));
-            });
+        res.send(laMetric.createError('arguments missing: ' + JSON.stringify(query), query.transportMode));
     }
 };
 
