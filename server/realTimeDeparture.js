@@ -85,9 +85,7 @@ const calculateMinutesLeft = (expectedDepartureTime) => {
 };
 
 const findNextDeparture = (responseData, query) => {
-    console.log(query);
     let departures = responseData;
-
     if (query.lineNumbers.length > 0) {
         departures = responseData.filter(item => {
             return (query.lineNumbers.indexOf(item.LineNumber.toLowerCase()) > -1)
