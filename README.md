@@ -9,7 +9,7 @@ https://apps.lametric.com/apps/next-departure/6200
 Here is a short explanation of the different configuration options required by the LaMetric app. 
 Further explanations of these can be found at https://www.trafiklab.se/node/15754/documentation
 
-* site-id = Unique identification number for the stop or station of interest
+* site-id = Unique identification number for the stop or station of interest. Use https://www.trafiklab.se/api/sl-platsuppslag/konsol to get the site-id you need.
 * transport-mode = which transportation mode to fetch information for
 * journey-direction = Direction of journey, either 1 or 2
 * skip-minutes = next departure to skip because it will depart before one can get to the stop or station
