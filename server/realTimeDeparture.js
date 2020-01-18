@@ -26,32 +26,37 @@ RealTimeDeparture.execute = (query) => {
             }, error => {
                 if (thresholdCache.get(query.getCacheKey()) === null) {
                     thresholdCache.put(query.getCacheKey(), 1, THIRTY_MINUTES);
-                    console.log('Failed to parse cached data, fetching new data');
-                    queryRealTimeDeparturesApi(query).then(response => {
-                        resolve(laMetric.createResponse(response, query.transportMode));
-                    }, error => {
-                        reject(laMetric.createError(error, query.transportMode));
-                    })
+                    console.log('thresholdCache size: ' + thresholdCache.size());
+                    console.log('Failed to parse cached data, fetching new data', error);
+                    queryForRealTimeDepartures(query, resolve, reject);
                 } else {
                     console.log('Failed to parse cached data and threshold reached');
                     reject(laMetric.createError(error, query.transportMode));
                 }
             });
         } else {
-            queryRealTimeDeparturesApi(query).then(response => {
-                resolve(laMetric.createResponse(response, query.transportMode));
-            }, error => {
-                reject(laMetric.createError(error, query.transportMode));
-            })
+            queryForRealTimeDepartures(query, resolve, reject);
         }
     })
 };
+
+function queryForRealTimeDepartures(query, resolve, reject) {
+    queryRealTimeDeparturesApi(query).then(response => {
+        resolve(laMetric.createResponse(response, query.transportMode));
+    }, error => {
+        reject(laMetric.createError(error, query.transportMode));
+    })
+}
 
 function queryRealTimeDeparturesApi(query) {
     return new Promise((resolve, reject) => {
         restClient.get(createRequest(query.siteId))
             .then(json => {
+                if (json.StatusCode > 0) {
+                    console.log(json);
+                }
                 departureCache.put(query.getCacheKey(), json, getCacheTime());
+                console.log('departureCache size: ' + departureCache.size());
                 findTimeTilNextDeparture(json, query).then(nextDepartureTime => {
                     resolve(nextDepartureTime);
                 }, error => {
@@ -70,7 +75,11 @@ const findTimeTilNextDeparture = (json, query) => {
         if (transportModeResponseData.length > 0) {
             const nextDeparture = findNextDeparture(transportModeResponseData, query);
             if (nextDeparture) {
-                resolve(calculateMinutesLeft(nextDeparture.ExpectedDateTime) + " min");
+                let response = `${calculateMinutesLeft(nextDeparture.ExpectedDateTime)} min`;
+                if (query.displayLineNumber) {
+                    response = `${nextDeparture.LineNumber}: ${response}`;
+                }
+                resolve(response);
             } else {
                 reject("inga avgångar funna");
             }
