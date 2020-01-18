@@ -9,8 +9,9 @@ https://apps.lametric.com/apps/next-departure/6200
 * site-id = Unique identification number for the stop or station of interest, i.e. 9192 for Slussen. Use https://www.trafiklab.se/api/sl-platsuppslag/konsol to get the site-id you need.
 * transport-mode = which transportation mode to fetch information for
 * journey-direction = Direction of journey, either 1 or 2. Use https://drive.google.com/file/d/1hjcMnPNd_vU7uqEd9utz1DnQcgnyyNsy/view?usp=sharing to figure out the direction you need.
-* skip-minutes = next departure to skip because it will depart before one can get to the stop or station
-* line-numbers (optional) = Comma (,) separated list of line numbers that next departure should be displayed for 
+* skip-minutes = Will skip displaying departures within specified time
+* line-numbers (optional) = Comma (,) separated list of line numbers that next departure should be displayed for
+* display-line-number = Should the line number be displayed or not
 
 ### Development
 
