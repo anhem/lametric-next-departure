@@ -4,7 +4,7 @@ Backend for LaMetric app **Next Departure** that fetches departure information f
 
 ### App configuration
 
-https://apps.lametric.com/apps/next-departure/6200
+https://apps.lametric.com/apps/next_departure/6200
 
 * site-id = Unique identification number for the stop or station of interest, i.e. 9192 for Slussen. Use https://www.trafiklab.se/api/sl-platsuppslag/konsol to get the site-id you need.
 * transport-mode = which transportation mode to fetch information for
