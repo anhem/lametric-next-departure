@@ -77,7 +77,7 @@ const findTimeTilNextDeparture = (json, query) => {
             if (nextDeparture) {
                 let departureTime = [`${calculateMinutesLeft(nextDeparture.ExpectedDateTime)} min`];
                 if (query.displayLineNumber) {
-                    departureTime = [`${nextDeparture.LineNumber}`, `${departureTime}`, `${nextDeparture.LineNumber}`, `${departureTime}`];
+                    departureTime = [`${nextDeparture.LineNumber}`, `${departureTime}`, `${nextDeparture.LineNumber}`, `${departureTime}`, `${nextDeparture.LineNumber}`, `${departureTime}`];
                 }
                 resolve(departureTime);
             } else {
