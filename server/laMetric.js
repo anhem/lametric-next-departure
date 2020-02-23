@@ -4,8 +4,6 @@ const BUS_ICON = 'a1309';
 const METRO_ICON = 'a16095';
 const TRAM_ICON = 'a11305';
 const SHIP_ICON = 'a16309';
-const MESSAGE_DURATION = 10000;
-const ERROR_MESSAGE_DURATION = 15000;
 
 laMetric.createResponse = (message, transportMode) => {
    const frames = message.map((value, index) => {
@@ -28,8 +26,7 @@ laMetric.createError = (errorMessage, transportMode) => {
             {
                 text: errorMessage,
                 icon: getIcon(transportMode),
-                index: 0,
-                duration: ERROR_MESSAGE_DURATION
+                index: 0
             }
         ]
     };
