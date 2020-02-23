@@ -75,11 +75,11 @@ const findTimeTilNextDeparture = (json, query) => {
         if (transportModeResponseData.length > 0) {
             const nextDeparture = findNextDeparture(transportModeResponseData, query);
             if (nextDeparture) {
-                let response = `${calculateMinutesLeft(nextDeparture.ExpectedDateTime)} min`;
+                let departureTime = [`${calculateMinutesLeft(nextDeparture.ExpectedDateTime)} min`];
                 if (query.displayLineNumber) {
-                    response = `${nextDeparture.LineNumber}: ${response}`;
+                    departureTime = [`${nextDeparture.LineNumber}`, `${departureTime}`];
                 }
-                resolve(response);
+                resolve(departureTime);
             } else {
                 reject("inga avgångar funna");
             }

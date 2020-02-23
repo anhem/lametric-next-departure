@@ -8,15 +8,16 @@ const MESSAGE_DURATION = 10000;
 const ERROR_MESSAGE_DURATION = 15000;
 
 laMetric.createResponse = (message, transportMode) => {
+   const frames = message.map((value, index) => {
+        return {
+            text: value,
+            icon: getIcon(transportMode),
+            index: index,
+            duration: MESSAGE_DURATION
+        }
+    });
     const response = {
-        frames: [
-            {
-                text: message,
-                icon: getIcon(transportMode),
-                index: 0,
-                duration: MESSAGE_DURATION
-            }
-        ]
+        frames: frames
     };
     console.log('Response: ' + JSON.stringify(response));
     return response;
