@@ -12,8 +12,7 @@ laMetric.createResponse = (message, transportMode) => {
         return {
             text: value,
             icon: getIcon(transportMode),
-            index: index,
-            duration: MESSAGE_DURATION
+            index: index
         }
     });
     const response = {
