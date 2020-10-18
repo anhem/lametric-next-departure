@@ -13,6 +13,28 @@ https://apps.lametric.com/apps/next_departure/6200
 * line-numbers (optional) = Comma (,) separated list of line numbers that next departure should be displayed for
 * display-line-number = Should the line number be displayed or not
 
+### Running with Docker
+
+Create a `.env` file with the `REAL_TIME_DEPARTURES_V4_KEY` obtained from Trafiklab.
+
+```
+REAL_TIME_DEPARTURES_V4_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+You can use the provided `docker-compose.yml` that will use the .env file for the API Key.
+
+Run following to start as a daemon.
+
+```
+docker-compose up -d
+```
+
+If you wish to run the server using docker-cli instead of docker-compose, you can run the `docker-run.sh` to build and run the server.
+
+```
+sh docker-run.sh
+```
+
 ### Development
 
 Set api key by environment variable `REAL_TIME_DEPARTURES_V4_KEY`
@@ -23,3 +45,6 @@ example once backend is started:
 ```
 http://localhost:3000/api/next?site-id=1080&transport-mode=train&journey-direction=1&skip-minutes=10&display-line-number=true
 ```
+
+### Contributors
+- Bhagya Silva [(github.com/bhagyas)](https://github.com/bhagyas)
