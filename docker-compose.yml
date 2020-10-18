@@ -1,0 +1,9 @@
+version: '3'
+services:
+  next_train:
+    build: .
+    ports: 
+      - "3000:3000"
+    environment:
+      - "REAL_TIME_DEPARTURES_V4_KEY=${REAL_TIME_DEPARTURES_V4_KEY}"
+    restart: on-failure 
