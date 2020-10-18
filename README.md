@@ -47,4 +47,4 @@ http://localhost:3000/api/next?site-id=1080&transport-mode=train&journey-directi
 ```
 
 ### Contributors
-- Bhagya Silva [(github.com/bhagyas)](https://github.com/bhagyas)
+- Bhagya Silva - [github.com/bhagyas](https://github.com/bhagyas)
