@@ -23,3 +23,14 @@ example once backend is started:
 ```
 http://localhost:3000/api/next?site-id=1080&transport-mode=train&journey-direction=1&skip-minutes=10&display-line-number=true
 ```
+
+### Docker
+
+Build with
+```
+> docker build -t next-departure .
+```
+Run with
+```
+> docker run -e REAL_TIME_DEPARTURES_V4_KEY=<key> -d --name next-departure -p 8080:3000 next-departure
+```
