@@ -5,13 +5,13 @@
     "express": "4.17.1",
     "isomorphic-fetch": "3.0.0",
     "memory-cache": "0.2.0",
-    "moment": "2.29.0",
-    "moment-timezone": "0.5.31"
+    "moment": "2.29.1",
+    "moment-timezone": "0.5.33"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",
     "babel-preset-env": "1.7.0",
-    "nodemon": "2.0.4"
+    "nodemon": "2.0.7"
   },
   "scripts": {
     "babel-node": "babel-node --presets=env",
