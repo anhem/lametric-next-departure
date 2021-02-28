@@ -28,9 +28,9 @@ http://localhost:3000/api/next?site-id=1080&transport-mode=train&journey-directi
 
 Build with
 ```
-> docker build -t next-departure .
+docker build -t next-departure .
 ```
 Run with
 ```
-> docker run -e REAL_TIME_DEPARTURES_V4_KEY=<key> -d --name next-departure -p 8080:3000 next-departure
+docker run -e REAL_TIME_DEPARTURES_V4_KEY=<key> -d --name next-departure -p 8084:3000 --restart unless-stopped next-departure
 ```

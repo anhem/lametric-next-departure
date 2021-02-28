@@ -9,7 +9,6 @@ RUN apt-get update && \
 
 WORKDIR /build
 COPY . .
-RUN npm --version
 RUN npm install
 RUN npm run build
 
