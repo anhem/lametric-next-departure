@@ -6,7 +6,7 @@
     "isomorphic-fetch": "3.0.0",
     "memory-cache": "0.2.0",
     "moment": "2.29.1",
-    "moment-timezone": "0.5.33"
+    "moment-timezone": "0.5.35"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",
