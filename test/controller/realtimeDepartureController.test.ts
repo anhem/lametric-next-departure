@@ -1,0 +1,72 @@
+import fetchMock from "jest-fetch-mock";
+import * as departures from "../data/realtimedeparturesV4.json";
+import {
+  getNextDeparture,
+  INVALID_REQUEST,
+} from "../../src/controller/realtimeDepartureController";
+import { TRAIN_ICON, WARNING_ICON } from "../../src/service/laMetricService";
+import { TransportMode } from "../../src/model/TransportMode";
+
+describe("realtimeDeparturesController", () => {
+  const query = {
+    "site-id": 1080,
+    "transport-mode": TransportMode.train,
+    "journey-direction": 1,
+  };
+
+  beforeEach(() => {
+    fetchMock.enableMocks();
+    jest.useFakeTimers().setSystemTime(new Date("2023-04-15T17:09:00"));
+  });
+
+  afterEach(() => {
+    fetchMock.resetMocks();
+  });
+
+  test("getNextDeparture responds with invalid request when request is empty", async () => {
+    const req = {
+      query: {},
+    };
+    const res: any = {
+      json: jest.fn(),
+    };
+
+    await getNextDeparture(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      frames: [{ icon: WARNING_ICON, index: 0, text: INVALID_REQUEST }],
+    });
+  });
+
+  test("getNextDeparture responds with Error when unable to fetch departure data", async () => {
+    fetchMock.mockRejectedValue("");
+    const req = {
+      query: query,
+    };
+    const res = {
+      json: jest.fn(),
+    };
+
+    await getNextDeparture(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      frames: [{ icon: WARNING_ICON, index: 0, text: "Error" }],
+    });
+  });
+
+  test("getNextDeparture responds with required request values", async () => {
+    fetchMock.mockResponse(JSON.stringify(departures));
+    const req = {
+      query: query,
+    };
+    const res = {
+      json: jest.fn(),
+    };
+
+    await getNextDeparture(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      frames: [{ icon: TRAIN_ICON, index: 0, text: "0 min" }],
+    });
+  });
+});
