@@ -1,4 +1,3 @@
-import fetchMock from "jest-fetch-mock";
 import * as departures from "../data/realtimedeparturesV4.json";
 import {
   getNextDeparture,
@@ -15,33 +14,13 @@ describe("realtimeDeparturesController", () => {
   };
 
   beforeEach(() => {
-    fetchMock.enableMocks();
-    jest.useFakeTimers().setSystemTime(new Date("2023-04-15T17:09:00"));
-  });
-
-  afterEach(() => {
     fetchMock.resetMocks();
+    jest.useFakeTimers().setSystemTime(new Date("2023-04-15T17:09:00"));
   });
 
   test("getNextDeparture responds with invalid request when request is empty", async () => {
     const req = {
       query: {},
-    };
-    const res: any = {
-      json: jest.fn(),
-    };
-
-    await getNextDeparture(req, res);
-
-    expect(res.json).toHaveBeenCalledWith({
-      frames: [{ icon: WARNING_ICON, index: 0, text: INVALID_REQUEST }],
-    });
-  });
-
-  test("getNextDeparture responds with Error when unable to fetch departure data", async () => {
-    fetchMock.mockRejectedValue("");
-    const req = {
-      query: query,
     };
     const res = {
       json: jest.fn(),
@@ -50,7 +29,7 @@ describe("realtimeDeparturesController", () => {
     await getNextDeparture(req, res);
 
     expect(res.json).toHaveBeenCalledWith({
-      frames: [{ icon: TRAIN_ICON, index: 0, text: "Error" }],
+      frames: [{ icon: WARNING_ICON, index: 0, text: INVALID_REQUEST }],
     });
   });
 
@@ -67,6 +46,22 @@ describe("realtimeDeparturesController", () => {
 
     expect(res.json).toHaveBeenCalledWith({
       frames: [{ icon: TRAIN_ICON, index: 0, text: "0 min" }],
+    });
+  });
+
+  test("getNextDeparture responds with Error when unable to fetch departure data", async () => {
+    fetchMock.mockRejectedValue("");
+    const req = {
+      query: { ...query, "site-id": 10801080 },
+    };
+    const res = {
+      json: jest.fn(),
+    };
+
+    await getNextDeparture(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      frames: [{ icon: TRAIN_ICON, index: 0, text: "Error" }],
     });
   });
 });

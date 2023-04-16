@@ -1,4 +1,3 @@
-import fetchMock from "jest-fetch-mock";
 import * as departures from "../data/realtimedeparturesV4.json";
 import {
   findNextDeparture,
@@ -18,13 +17,9 @@ describe("realtimeDeparturesService", () => {
   };
 
   beforeEach(() => {
-    fetchMock.enableMocks();
-    jest.useFakeTimers().setSystemTime(new Date("2023-04-15T17:09:00"));
-    fetchMock.mockResponse(JSON.stringify(departures));
-  });
-
-  afterEach(() => {
     fetchMock.resetMocks();
+    fetchMock.mockResponse(JSON.stringify(departures));
+    jest.useFakeTimers().setSystemTime(new Date("2023-04-15T17:09:00"));
   });
 
   test("findNextDeparture returns departure", async () => {

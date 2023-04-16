@@ -1,5 +1,4 @@
 import * as departures from '../data/realtimedeparturesV4.json';
-import fetchMock from "jest-fetch-mock";
 import {getRealtimeDepartures} from "../../src/client/realtimeDeparturesClient";
 import {ResponseRD} from "../../src/client/model/ResponseRD";
 
@@ -7,13 +6,9 @@ import {ResponseRD} from "../../src/client/model/ResponseRD";
 describe('realtimeDeparturesClient', () => {
 
     beforeEach(() => {
-        fetchMock.enableMocks();
+        fetchMock.resetMocks();
         fetchMock.mockResponse(JSON.stringify(departures));
     });
-
-    afterEach(() => {
-        fetchMock.resetMocks();
-    })
 
     test('getRealtimeDepartures returns departures', async () => {
         const response: ResponseRD = await getRealtimeDepartures(1080);
