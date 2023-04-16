@@ -2,7 +2,8 @@
   "name": "next-departure",
   "version": "1.0.0",
   "scripts": {
-    "start": "nodemon ./src/app.ts",
+    "dev": "LOG_LEVEL=debug nodemon ./src/app.ts",
+    "start": "node dist/app.js",
     "lint": "eslint . --ext .ts",
     "build": "npm run lint && npm run test && tsc",
     "test": "jest"

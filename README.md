@@ -15,7 +15,7 @@ https://apps.lametric.com/apps/next_departure/6200
 
 ### Development
 
-use `LOG_LEVEL=<log level> REAL_TIME_DEPARTURES_V4_KEY=<api key> npm start` to start in development mode
+use `LOG_LEVEL=debug REAL_TIME_DEPARTURES_V4_KEY=<api key> npm run dev` to start in development mode
 
 example request once backend is started:
 ```

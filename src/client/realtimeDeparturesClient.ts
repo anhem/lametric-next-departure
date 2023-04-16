@@ -1,6 +1,5 @@
 import "isomorphic-fetch";
 import { ResponseRD } from "./model/ResponseRD";
-import logger from "../logger";
 
 const REAL_TIME_DEPARTURES_V4_KEY = process.env.REAL_TIME_DEPARTURES_V4_KEY;
 const BASE_URL =
@@ -8,32 +7,18 @@ const BASE_URL =
   REAL_TIME_DEPARTURES_V4_KEY;
 const TIME_WINDOW = 60;
 
-export function getRealtimeDepartures(siteId: number): Promise<ResponseRD> {
-  return fetch(createRequestUrl(siteId))
-    .then((response) => {
-      return response.json().then((json) => {
-        if (response.status >= 400) {
-          logger.error(
-            `Get request failed. ${response.status} - ${JSON.stringify(json)}`
-          );
-          return Promise.reject(json);
-        } else {
-          return Promise.resolve(json);
-        }
-      });
-    })
-    .then(
-      (response) => {
-        return Promise.resolve(response);
-      },
-      (error) => {
-        logger.error(error);
-        return Promise.reject("Failed to fetch information from SL");
-      }
-    );
+export async function getRealtimeDepartures(
+  siteId: number
+): Promise<ResponseRD> {
+  try {
+    const response = await fetch(createRequestUrl(siteId));
+    return response.json();
+  } catch (error) {
+    throw new Error(`getRealtimeDepartures failed: ${error}`);
+  }
 }
 
 function createRequestUrl(siteId: number): string {
-  const request = `&siteid=${siteId}&timewindow=${TIME_WINDOW}&train=true&bus=true&metro=true&tram=true&ships=true`;
+  const request = `&siteid=${siteId}&timewindow=${TIME_WINDOW}`;
   return BASE_URL + request;
 }
