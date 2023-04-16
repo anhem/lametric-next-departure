@@ -2,24 +2,25 @@ import { NextDepartureRequest } from "../model/NextDepartureRequest";
 import { findNextDeparture } from "../service/realtimeDepartureService";
 import { createError, createResponse } from "../service/laMetricService";
 import { TransportMode } from "../model/TransportMode";
+import logger from "../logger";
 
 export const INVALID_REQUEST = "invalid request";
 
 export async function getNextDeparture(req, res) {
   const nextDepartureRequest = toNextDepartureRequest(req);
   if (isValid(nextDepartureRequest)) {
-    console.log(`Incoming request: ${JSON.stringify(nextDepartureRequest)}`);
+    logger.info(`Incoming request: ${JSON.stringify(nextDepartureRequest)}`);
     try {
       const nextDeparture = await findNextDeparture(nextDepartureRequest);
       res.json(
         createResponse(nextDeparture, nextDepartureRequest.transportMode)
       );
     } catch (error) {
-      console.log(`Error: ${error}`);
-      res.json(createError("Error", undefined));
+      logger.error(`Error: ${error}`);
+      res.json(createError("Error", nextDepartureRequest.transportMode));
     }
   } else {
-    console.log(`Invalid request: ${JSON.stringify(nextDepartureRequest)}`);
+    logger.warn(`Invalid request: ${JSON.stringify(nextDepartureRequest)}`);
     res.json(createError(INVALID_REQUEST, undefined));
   }
 }

@@ -1,4 +1,5 @@
 import { TransportMode } from "../model/TransportMode";
+import logger from "../logger";
 
 export const TRAIN_ICON = "a1395";
 const BUS_ICON = "a1309";
@@ -7,7 +8,7 @@ const TRAM_ICON = "a11305";
 const SHIP_ICON = "a16309";
 export const WARNING_ICON = "17911";
 
-export function createResponse(message, transportMode) {
+export function createResponse(message: string[], transportMode: TransportMode) {
   const frames = message.map((value, index) => {
     return {
       text: value,
@@ -18,11 +19,11 @@ export function createResponse(message, transportMode) {
   const response = {
     frames: frames,
   };
-  console.log(`Response: ${JSON.stringify(response)}`);
+  logger.info(`Response: ${JSON.stringify(response)}`);
   return response;
 }
 
-export function createError(errorMessage, transportMode) {
+export function createError(errorMessage: string, transportMode: TransportMode|undefined) {
   const response = {
     frames: [
       {
@@ -32,7 +33,7 @@ export function createError(errorMessage, transportMode) {
       },
     ],
   };
-  console.log(`Error: ${JSON.stringify(response)}`);
+  logger.info(`Error: ${JSON.stringify(response)}`);
   return response;
 }
 

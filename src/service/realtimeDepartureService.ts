@@ -5,6 +5,7 @@ import { ResponseRD } from "../client/model/ResponseRD";
 import { TransportMode } from "../model/TransportMode";
 import { ResponseDataRD } from "../client/model/ResponseDataRD";
 import { DepartureRD } from "../client/model/DepartureRD";
+import logger from "../logger";
 
 const THIRTY_MINUTES = 1800000;
 export const NO_DEPARTURES: string[] = ["?"];
@@ -14,14 +15,17 @@ export async function findNextDeparture(
   nextDepartureRequest: NextDepartureRequest
 ) {
   const responseData = await getDepartures(nextDepartureRequest.siteId);
+  logger.debug(`responseData: ${JSON.stringify(responseData)}`);
   const departures = extractTransportModeDepartures(
     responseData,
     nextDepartureRequest.transportMode
   );
+  logger.debug(`departures: ${JSON.stringify(departures)}`);
   const nextDeparture: DepartureRD = extractDeparture(
     departures,
     nextDepartureRequest
   );
+  logger.debug(`nextDeparture: ${JSON.stringify(nextDeparture)}`);
   return formatDepartureResponse(
     nextDeparture,
     nextDepartureRequest.displayLineNumber
@@ -31,12 +35,12 @@ export async function findNextDeparture(
 async function getDepartures(siteId): Promise<ResponseDataRD> {
   const cachedResponseRD: ResponseRD = departureCache.get(siteId);
   if (cachedResponseRD !== null) {
-    console.log(`Found cached response for key: ${siteId}`);
+    logger.info(`Found cached response for key: ${siteId}`);
     return cachedResponseRD.ResponseData;
   } else {
     const responseRD: ResponseRD = await getRealtimeDepartures(siteId);
     departureCache.put(siteId, responseRD, THIRTY_MINUTES);
-    console.log(
+    logger.info(
       `Added ${siteId} to departureCache. Current size: ${departureCache.size()}`
     );
     return responseRD.ResponseData;
@@ -47,20 +51,23 @@ function extractTransportModeDepartures(
   responseDataRD: ResponseDataRD,
   transportMode: TransportMode
 ): DepartureRD[] {
-  switch (transportMode) {
-    case TransportMode.bus:
-      return responseDataRD.Buses || [];
-    case TransportMode.metro:
-      return responseDataRD.Metros || [];
-    case TransportMode.train:
-      return responseDataRD.Trains || [];
-    case TransportMode.tram:
-      return responseDataRD.Trams || [];
-    case TransportMode.ships:
-      return responseDataRD.Ships || [];
-    default:
-      return [];
+  if (responseDataRD) {
+    switch (transportMode) {
+      case TransportMode.bus:
+        return responseDataRD.Buses || [];
+      case TransportMode.metro:
+        return responseDataRD.Metros || [];
+      case TransportMode.train:
+        return responseDataRD.Trains || [];
+      case TransportMode.tram:
+        return responseDataRD.Trams || [];
+      case TransportMode.ships:
+        return responseDataRD.Ships || [];
+      default:
+        return [];
+    }
   }
+  return [];
 }
 
 function extractDeparture(

@@ -50,7 +50,7 @@ describe("realtimeDeparturesController", () => {
     await getNextDeparture(req, res);
 
     expect(res.json).toHaveBeenCalledWith({
-      frames: [{ icon: WARNING_ICON, index: 0, text: "Error" }],
+      frames: [{ icon: TRAIN_ICON, index: 0, text: "Error" }],
     });
   });
 
