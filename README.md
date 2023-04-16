@@ -15,11 +15,9 @@ https://apps.lametric.com/apps/next_departure/6200
 
 ### Development
 
-Set api key by environment variable `REAL_TIME_DEPARTURES_V4_KEY`
+use `LOG_LEVEL=<log level> REAL_TIME_DEPARTURES_V4_KEY=<api key> npm start` to start in development mode
 
-use `REAL_TIME_DEPARTURES_V4_KEY=<api key> npm start` to start in development mode
-
-example once backend is started:
+example request once backend is started:
 ```
 http://localhost:3000/api/next?site-id=1080&transport-mode=train&journey-direction=1&skip-minutes=10&display-line-number=true
 ```
