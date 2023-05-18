@@ -1,6 +1,6 @@
 ## Next Departure
 
-Backend for LaMetric app **Next Departure** that fetches departure information for stops and stations within Stockholms Lokaltrafik.
+LaMetric app that displays departure information for stops and stations within Stockholms Lokaltrafik.
 
 ### App configuration
 
