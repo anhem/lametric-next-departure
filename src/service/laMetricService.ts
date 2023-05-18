@@ -1,5 +1,6 @@
 import { TransportMode } from "../model/TransportMode";
 import logger from "../logger";
+import { NextDepartureResponse } from "../model/NextDepartureResponse";
 
 export const TRAIN_ICON = "a1395";
 const BUS_ICON = "a1309";
@@ -8,7 +9,10 @@ const TRAM_ICON = "a11305";
 const SHIP_ICON = "a16309";
 export const WARNING_ICON = "17911";
 
-export function createResponse(message: string[], transportMode: TransportMode) {
+export function createResponse(
+  message: string[],
+  transportMode: TransportMode
+): NextDepartureResponse {
   const frames = message.map((value, index) => {
     return {
       text: value,
@@ -19,11 +23,14 @@ export function createResponse(message: string[], transportMode: TransportMode) 
   const response = {
     frames: frames,
   };
-  logger.info(`Response: ${JSON.stringify(response)}`);
+  logger.debug(`Created response ${JSON.stringify(response)}`);
   return response;
 }
 
-export function createError(errorMessage: string, transportMode: TransportMode|undefined) {
+export function createError(
+  errorMessage: string,
+  transportMode: TransportMode | undefined
+): NextDepartureResponse {
   const response = {
     frames: [
       {
@@ -33,7 +40,7 @@ export function createError(errorMessage: string, transportMode: TransportMode|u
       },
     ],
   };
-  logger.info(`Error: ${JSON.stringify(response)}`);
+  logger.debug(`Created error response ${JSON.stringify(response)}`);
   return response;
 }
 

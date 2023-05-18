@@ -1,5 +1,6 @@
 import "isomorphic-fetch";
 import { ResponseRD } from "./model/ResponseRD";
+import logger from "../logger";
 
 const REAL_TIME_DEPARTURES_V4_KEY = process.env.REAL_TIME_DEPARTURES_V4_KEY;
 const BASE_URL =
@@ -12,9 +13,17 @@ export async function getRealtimeDepartures(
 ): Promise<ResponseRD> {
   try {
     const response = await fetch(createRequestUrl(siteId));
-    return response.json();
+    const json = await response.json();
+    logger.debug(
+      `Got realtime departures response for ${siteId} as ${JSON.stringify(
+        json
+      )}`
+    );
+    return json;
   } catch (error) {
-    throw new Error(`getRealtimeDepartures failed: ${error}`);
+    throw new Error(
+      `Failed to get realtime departures due to ${error.message}`
+    );
   }
 }
 

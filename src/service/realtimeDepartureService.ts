@@ -15,17 +15,17 @@ export async function findNextDeparture(
   nextDepartureRequest: NextDepartureRequest
 ) {
   const responseData = await getDepartures(nextDepartureRequest.siteId);
-  logger.debug(`responseData: ${JSON.stringify(responseData)}`);
+  logger.debug(`got departures ${JSON.stringify(responseData)}`);
   const departures = extractTransportModeDepartures(
     responseData,
     nextDepartureRequest.transportMode
   );
-  logger.debug(`departures: ${JSON.stringify(departures)}`);
+  logger.debug(`extracted departures ${JSON.stringify(departures)}`);
   const nextDeparture: DepartureRD = extractDeparture(
     departures,
     nextDepartureRequest
   );
-  logger.debug(`nextDeparture: ${JSON.stringify(nextDeparture)}`);
+  logger.debug(`extracted next departure ${JSON.stringify(nextDeparture)}`);
   return formatDepartureResponse(
     nextDeparture,
     nextDepartureRequest.displayLineNumber
@@ -35,13 +35,13 @@ export async function findNextDeparture(
 async function getDepartures(siteId): Promise<ResponseDataRD> {
   const cachedResponseRD: ResponseRD = departureCache.get(siteId);
   if (cachedResponseRD !== null) {
-    logger.info(`Found cached response for key: ${siteId}`);
+    logger.debug(`Found cached response for key ${siteId}`);
     return cachedResponseRD.ResponseData;
   } else {
     const responseRD: ResponseRD = await getRealtimeDepartures(siteId);
     departureCache.put(siteId, responseRD, THIRTY_MINUTES);
     logger.info(
-      `Added ${siteId} to departureCache. Current size: ${departureCache.size()}`
+      `Added ${siteId} to departureCache. Current size ${departureCache.size()}`
     );
     return responseRD.ResponseData;
   }
