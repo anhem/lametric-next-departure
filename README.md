@@ -1,6 +1,8 @@
 ## Next Departure
 
-LaMetric app that displays departure information for stops and stations within Stockholms Lokaltrafik.
+LaMetric app that displays departure information for stops and stations within Stockholms Lokaltrafik. 
+
+Demo: https://www.youtube.com/watch?v=-n2hw2vIQRM
 
 ### App configuration
 
