@@ -1,5 +1,6 @@
 import * as departures from "../data/realtimedeparturesV4.json";
 import {
+  ERROR,
   getNextDeparture,
   INVALID_REQUEST,
 } from "../../src/controller/realtimeDepartureController";
@@ -61,7 +62,7 @@ describe("realtimeDeparturesController", () => {
     await getNextDeparture(req, res);
 
     expect(res.json).toHaveBeenCalledWith({
-      frames: [{ icon: TRAIN_ICON, index: 0, text: "Error" }],
+      frames: [{ icon: TRAIN_ICON, index: 0, text: ERROR }],
     });
   });
 });

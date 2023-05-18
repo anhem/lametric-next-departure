@@ -16,7 +16,10 @@ export function toNextDepartureRequest(request): NextDepartureRequest {
     journeyDirection: parseInt(request.query["journey-direction"]),
     skipMinutes: parseInt(request.query["skip-minutes"]) || 0,
     lineNumbers: request.query["line-numbers"]
-      ? request.query["line-numbers"].toLowerCase().split(",")
+      ? request.query["line-numbers"]
+          .toLowerCase()
+          .split(",")
+          .map((lineNumber) => lineNumber.trim())
       : [],
     displayLineNumber: request.query["display-line-number"]
       ? request.query["display-line-number"] === "true"
