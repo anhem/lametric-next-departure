@@ -4,7 +4,7 @@ LaMetric app that displays departure information for stops and stations within S
 
 Demo: https://www.youtube.com/watch?v=-n2hw2vIQRM
 
-## Data source
+### Data source
 
 All information about departures are fetched
 from [SL Realtidsinformation 4](https://www.trafiklab.se/sv/api/trafiklab-apis/sl/departures-4/)
