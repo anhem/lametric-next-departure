@@ -7,9 +7,9 @@ Demo: https://www.youtube.com/watch?v=-n2hw2vIQRM
 ### Data source
 
 All information about departures are fetched
-from [SL Realtidsinformation 4](https://www.trafiklab.se/sv/api/trafiklab-apis/sl/departures-4/)
+from [SL Transport Departures](https://www.trafiklab.se/api/trafiklab-apis/sl/transport/#/default/Departures)
 
-Uptime status: http://status.trafiklab.se/2412460
+Uptime status: https://status.trafiklab.se/ > SL > SL Transport Departures
 
 ### App configuration
 
@@ -32,8 +32,7 @@ The following is here in case anyone is interested in hosting their own backend 
 
 #### Run
 
-use `REAL_TIME_DEPARTURES_V4_KEY=<api key> npm run dev` to start in development mode. The api key can be requested
-from https://www.trafiklab.se/api/trafiklab-apis/sl/departures-4/
+use `npm run dev` to start in development mode.
 
 example request once backend is started:
 
@@ -52,5 +51,5 @@ docker build -t next-departure .
 Run with
 
 ```
-docker run -e REAL_TIME_DEPARTURES_V4_KEY=<key> -d --name next-departure -p 8084:3000 --restart unless-stopped next-departure
+docker run -d --name next-departure -p 8084:3000 --restart unless-stopped next-departure
 ```
