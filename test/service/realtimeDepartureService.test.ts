@@ -99,7 +99,7 @@ describe("realtimeDeparturesService", () => {
   });
 
   test("findNextDeparture returns no departure", async () => {
-    jest.useFakeTimers().setSystemTime(new Date());
+    jest.useFakeTimers().setSystemTime(new Date("2024-11-02T00:00:00"));
     const nextDeparture = await findNextDeparture(nextDepartureRequest);
     expect(nextDeparture).toEqual(NO_DEPARTURES);
   });
