@@ -1,4 +1,4 @@
-import * as departures from "../data/realtimedeparturesV4.json";
+import * as departures from "../data/transportsSiteDepartures.json";
 import {
   ERROR,
   getNextDeparture,
@@ -16,7 +16,7 @@ describe("realtimeDeparturesController", () => {
 
   beforeEach(() => {
     fetchMock.resetMocks();
-    jest.useFakeTimers().setSystemTime(new Date("2023-04-15T17:09:00"));
+    jest.useFakeTimers().setSystemTime(new Date("2024-10-02T18:37:00"));
   });
 
   test("getNextDeparture responds with invalid request when request is empty", async () => {

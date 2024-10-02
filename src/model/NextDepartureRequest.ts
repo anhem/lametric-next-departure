@@ -1,4 +1,10 @@
-import { TransportMode } from "./TransportMode";
+export enum TransportMode {
+  bus = "bus",
+  metro = "metro",
+  train = "train",
+  tram = "tram",
+  ships = "ships",
+}
 
 export interface NextDepartureRequest {
   siteId: number;

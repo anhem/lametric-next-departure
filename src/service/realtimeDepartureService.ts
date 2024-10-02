@@ -1,13 +1,10 @@
 import cache from "memory-cache";
 import { NextDepartureRequest } from "../model/NextDepartureRequest";
 import { getRealtimeDepartures } from "../client/realtimeDeparturesClient";
-import { ResponseRD } from "../client/model/ResponseRD";
-import { TransportMode } from "../model/TransportMode";
-import { ResponseDataRD } from "../client/model/ResponseDataRD";
-import { DepartureRD } from "../client/model/DepartureRD";
 import logger from "../logger";
+import { Departure, Departures } from "../client/model/Departures";
 
-const THIRTY_MINUTES = 1800000;
+const TEN_MINUTES = 600000;
 export const NO_DEPARTURES: string[] = ["?"];
 const departureCache = new cache.Cache();
 
@@ -16,13 +13,15 @@ export async function findNextDeparture(
 ) {
   const responseData = await getDepartures(nextDepartureRequest.siteId);
   logger.debug(`got departures ${JSON.stringify(responseData)}`);
-  const departures = extractTransportModeDepartures(
+  const departuresForTransportMode = extractTransportModeDepartures(
     responseData,
-    nextDepartureRequest.transportMode
+    nextDepartureRequest
   );
-  logger.debug(`extracted departures ${JSON.stringify(departures)}`);
-  const nextDeparture: DepartureRD = extractDeparture(
-    departures,
+  logger.debug(
+    `extracted departures ${JSON.stringify(departuresForTransportMode)}`
+  );
+  const nextDeparture: Departure = extractDeparture(
+    departuresForTransportMode,
     nextDepartureRequest
   );
   logger.debug(`extracted next departure ${JSON.stringify(nextDeparture)}`);
@@ -32,87 +31,73 @@ export async function findNextDeparture(
   );
 }
 
-async function getDepartures(siteId): Promise<ResponseDataRD> {
-  const cachedResponseRD: ResponseRD = departureCache.get(siteId);
-  if (cachedResponseRD !== null) {
+async function getDepartures(siteId: number): Promise<Departure[]> {
+  const cachedDepartures: Departures = departureCache.get(siteId);
+  if (cachedDepartures !== null) {
     logger.debug(`Found cached response for key ${siteId}`);
-    return cachedResponseRD.ResponseData;
+    return cachedDepartures.departures;
   } else {
-    const responseRD: ResponseRD = await getRealtimeDepartures(siteId);
-    departureCache.put(siteId, responseRD, THIRTY_MINUTES);
+    const departures: Departures = await getRealtimeDepartures(siteId);
+    departureCache.put(siteId, departures, TEN_MINUTES);
     logger.info(
       `Added ${siteId} to departureCache. Current size ${departureCache.size()}`
     );
-    return responseRD.ResponseData;
+    return departures.departures;
   }
 }
 
 function extractTransportModeDepartures(
-  responseDataRD: ResponseDataRD,
-  transportMode: TransportMode
-): DepartureRD[] {
-  if (responseDataRD) {
-    switch (transportMode) {
-      case TransportMode.bus:
-        return responseDataRD.Buses || [];
-      case TransportMode.metro:
-        return responseDataRD.Metros || [];
-      case TransportMode.train:
-        return responseDataRD.Trains || [];
-      case TransportMode.tram:
-        return responseDataRD.Trams || [];
-      case TransportMode.ships:
-        return responseDataRD.Ships || [];
-      default:
-        return [];
-    }
-  }
-  return [];
+  responseData: Departure[],
+  nextDepartureRequest: NextDepartureRequest
+) {
+  return responseData.filter(
+    (departure) =>
+      departure.line.transport_mode ===
+      nextDepartureRequest.transportMode.toUpperCase()
+  );
 }
 
 function extractDeparture(
-  departures: DepartureRD[],
+  departures: Departure[],
   nextDepartureRequest: NextDepartureRequest
-): DepartureRD {
+): Departure {
   return departures
     .filter(
       (departure) =>
         nextDepartureRequest.lineNumbers.length == 0 ||
-        nextDepartureRequest.lineNumbers.indexOf(
-          departure.LineNumber.toLowerCase()
-        ) > -1
+        nextDepartureRequest.lineNumbers.indexOf(`${departure.line.id}`) > -1
     )
     .filter(
       (departure) =>
-        departure.JourneyDirection === nextDepartureRequest.journeyDirection
+        departure.direction_code === nextDepartureRequest.journeyDirection
     )
     .sort(
       (departure1, departure2) =>
-        new Date(departure1.ExpectedDateTime).getTime() -
-        new Date(departure2.ExpectedDateTime).getTime()
+        new Date(departure1.expected).getTime() -
+        new Date(departure2.expected).getTime()
     )
     .find(
       (departure) =>
-        calculateMinutesLeft(departure.ExpectedDateTime) >=
+        calculateMinutesLeft(departure.expected) >=
         nextDepartureRequest.skipMinutes
     );
 }
 
 function formatDepartureResponse(
-  nextDeparture: DepartureRD,
+  nextDeparture: Departure,
   displayLineNumber: boolean
 ): string[] {
   if (nextDeparture) {
     const departureTime = [
-      `${calculateMinutesLeft(nextDeparture.ExpectedDateTime)} min`,
+      `${calculateMinutesLeft(nextDeparture.expected)} min`,
     ];
     if (displayLineNumber) {
       return [
-        `${nextDeparture.LineNumber}`,
+        `${nextDeparture.line.id}`,
         `${departureTime}`,
-        `${nextDeparture.LineNumber}`,
+        `${nextDeparture.line.id}`,
         `${departureTime}`,
-        `${nextDeparture.LineNumber}`,
+        `${nextDeparture.line.id}`,
         `${departureTime}`,
       ];
     }
@@ -122,7 +107,7 @@ function formatDepartureResponse(
   }
 }
 
-function calculateMinutesLeft(expectedDepartureTime): number {
+function calculateMinutesLeft(expectedDepartureTime: Date): number {
   const durationInMs =
     new Date(expectedDepartureTime).getTime() - new Date().getTime();
   return Math.floor(durationInMs / 1000 / 60);

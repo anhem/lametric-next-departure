@@ -1,18 +1,17 @@
 import "isomorphic-fetch";
-import { ResponseRD } from "./model/ResponseRD";
 import logger from "../logger";
+import {Departures} from "./model/Departures";
 
-const REAL_TIME_DEPARTURES_V4_KEY = process.env.REAL_TIME_DEPARTURES_V4_KEY;
-const BASE_URL =
-  "https://api.sl.se/api2/realtimedeparturesV4.json?key=" +
-  REAL_TIME_DEPARTURES_V4_KEY;
-const TIME_WINDOW = 60;
+const BASE_URL = "https://transport.integration.sl.se/v1";
+const FORECAST = 60
 
 export async function getRealtimeDepartures(
   siteId: number
-): Promise<ResponseRD> {
+): Promise<Departures> {
   try {
-    const response = await fetch(createRequestUrl(siteId));
+    const url = `${BASE_URL}/sites/${siteId}/departures?forecast=${FORECAST}`;
+    console.log(url);
+    const response = await fetch(url);
     const json = await response.json();
     logger.debug(
       `Got realtime departures response for ${siteId} as ${JSON.stringify(
@@ -27,7 +26,3 @@ export async function getRealtimeDepartures(
   }
 }
 
-function createRequestUrl(siteId: number): string {
-  const request = `&siteid=${siteId}&timewindow=${TIME_WINDOW}`;
-  return BASE_URL + request;
-}

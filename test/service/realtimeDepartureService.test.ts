@@ -1,4 +1,4 @@
-import * as departures from "../data/realtimedeparturesV4.json";
+import * as departures from "../data/transportsSiteDepartures.json";
 import {
   findNextDeparture,
   NO_DEPARTURES,
@@ -19,7 +19,7 @@ describe("realtimeDeparturesService", () => {
   beforeEach(() => {
     fetchMock.resetMocks();
     fetchMock.mockResponse(JSON.stringify(departures));
-    jest.useFakeTimers().setSystemTime(new Date("2023-04-15T17:09:00"));
+    jest.useFakeTimers().setSystemTime(new Date("2024-10-02T18:37:00"));
   });
 
   test("findNextDeparture returns departure", async () => {
@@ -33,7 +33,7 @@ describe("realtimeDeparturesService", () => {
       skipMinutes: 5,
     };
     const nextDeparture = await findNextDeparture(request);
-    expect(nextDeparture).toEqual(["7 min"]);
+    expect(nextDeparture).toEqual(["9 min"]);
   });
 
   test("findNextDeparture returns departure with displayed line number", async () => {
@@ -43,11 +43,11 @@ describe("realtimeDeparturesService", () => {
     };
     const nextDeparture = await findNextDeparture(request);
     expect(nextDeparture).toEqual([
-      "41",
+      "43",
       "0 min",
-      "41",
+      "43",
       "0 min",
-      "41",
+      "43",
       "0 min",
     ]);
   });
@@ -61,11 +61,11 @@ describe("realtimeDeparturesService", () => {
     const nextDeparture = await findNextDeparture(request);
     expect(nextDeparture).toEqual([
       "40",
-      "15 min",
+      "17 min",
       "40",
-      "15 min",
+      "17 min",
       "40",
-      "15 min",
+      "17 min",
     ]);
   });
 
@@ -75,7 +75,7 @@ describe("realtimeDeparturesService", () => {
       journeyDirection: 2,
     };
     const nextDeparture = await findNextDeparture(request);
-    expect(nextDeparture).toEqual(["21 min"]);
+    expect(nextDeparture).toEqual(["2 min"]);
   });
 
   test("findNextDeparture returns departure with completely different request", async () => {
@@ -90,11 +90,11 @@ describe("realtimeDeparturesService", () => {
     const nextDeparture = await findNextDeparture(request);
     expect(nextDeparture).toEqual([
       "17",
-      "10 min",
+      "11 min",
       "17",
-      "10 min",
+      "11 min",
       "17",
-      "10 min",
+      "11 min",
     ]);
   });
 
