@@ -1,11 +1,11 @@
-FROM node:lts-alpine3.16 as builder
+FROM node:23-alpine3.20 as builder
 
 WORKDIR /build
 COPY . .
 RUN npm install
 RUN npm run build
 
-FROM node:lts-alpine3.16 as runtime
+FROM node:23-alpine3.20 as runtime
 
 ENV TZ=Europe/Stockholm
 
