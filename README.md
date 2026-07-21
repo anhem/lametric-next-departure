@@ -7,9 +7,7 @@ Demo: https://www.youtube.com/watch?v=-n2hw2vIQRM
 ### Data source
 
 All information about departures are fetched
-from [SL Transport Departures](https://www.trafiklab.se/api/trafiklab-apis/sl/transport/#/default/Departures)
-
-Uptime status: https://status.trafiklab.se/ > SL > SL Transport Departures
+from [SL Transport](https://www.trafiklab.se/sv/api/our-apis/sl/transport)
 
 ### App configuration
 
