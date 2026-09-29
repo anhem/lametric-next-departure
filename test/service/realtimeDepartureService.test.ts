@@ -103,4 +103,38 @@ describe("realtimeDeparturesService", () => {
     const nextDeparture = await findNextDeparture(nextDepartureRequest);
     expect(nextDeparture).toEqual(NO_DEPARTURES);
   });
+
+  test("findNextDeparture deduplicates simultaneous requests for the same siteId", async () => {
+    const request1: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9991 };
+    const request2: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9991 };
+    
+    const [result1, result2] = await Promise.all([
+      findNextDeparture(request1),
+      findNextDeparture(request2),
+    ]);
+
+    expect(result1).toEqual(["0 min"]);
+    expect(result2).toEqual(["0 min"]);
+    
+    const fetchCallsForSite = fetchMock.mock.calls.filter(call => (call[0] as string).includes("sites/9991"));
+    expect(fetchCallsForSite.length).toBe(1);
+  });
+
+  test("findNextDeparture does not deduplicate simultaneous requests for different siteIds", async () => {
+    const request1: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9992 };
+    const request2: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9993 };
+    
+    const [result1, result2] = await Promise.all([
+      findNextDeparture(request1),
+      findNextDeparture(request2),
+    ]);
+
+    expect(result1).toEqual(["0 min"]);
+    expect(result2).toEqual(["0 min"]);
+    
+    const fetchCallsForSite2 = fetchMock.mock.calls.filter(call => (call[0] as string).includes("sites/9992"));
+    const fetchCallsForSite3 = fetchMock.mock.calls.filter(call => (call[0] as string).includes("sites/9993"));
+    expect(fetchCallsForSite2.length).toBe(1);
+    expect(fetchCallsForSite3.length).toBe(1);
+  });
 });

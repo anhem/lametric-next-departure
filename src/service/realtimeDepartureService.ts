@@ -7,6 +7,7 @@ import { Departure, Departures } from "../client/model/Departures";
 const TEN_MINUTES = 600000;
 export const NO_DEPARTURES: string[] = ["?"];
 const departureCache = new cache.Cache();
+const pendingRequests = new Map<number, Promise<Departures>>();
 
 export async function findNextDeparture(
   nextDepartureRequest: NextDepartureRequest
@@ -36,13 +37,26 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
   if (cachedDepartures !== null) {
     logger.debug(`Found cached response for key ${siteId}`);
     return cachedDepartures.departures;
-  } else {
-    const departures: Departures = await getRealtimeDepartures(siteId);
+  }
+
+  if (pendingRequests.has(siteId)) {
+    logger.debug(`Found pending request for key ${siteId}`);
+    const departures = await pendingRequests.get(siteId);
+    return departures.departures;
+  }
+
+  const promise = getRealtimeDepartures(siteId);
+  pendingRequests.set(siteId, promise);
+
+  try {
+    const departures: Departures = await promise;
     departureCache.put(siteId, departures, TEN_MINUTES);
     logger.info(
       `Added ${siteId} to departureCache. Current size ${departureCache.size()}`
     );
     return departures.departures;
+  } finally {
+    pendingRequests.delete(siteId);
   }
 }
 
