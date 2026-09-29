@@ -9,77 +9,55 @@ describe("Metrics Utility", () => {
     jest.resetModules();
   });
 
-  test("should increment basic counters accurately", () => {
-    jest.isolateModules(() => {
-      const metrics = require("../../src/utils/metrics").default;
+  test("should increment basic counters accurately", async () => {
+    const { default: metrics } = await import("../../src/utils/metrics");
 
-      metrics.recordStat("incomingRequests");
-      metrics.recordStat("incomingRequests");
-      metrics.recordStat("cacheHits");
+    metrics.recordStat("incomingRequests");
+    metrics.recordStat("incomingRequests");
+    metrics.recordStat("cacheHits");
 
-      const stats = metrics.getMetrics();
-      expect(stats.incomingRequests).toBe(2);
-      expect(stats.cacheHits).toBe(1);
-      expect(stats.apiErrors).toBe(0);
-    });
+    const stats = metrics.getMetrics();
+    expect(stats.incomingRequests).toBe(2);
+    expect(stats.cacheHits).toBe(1);
+    expect(stats.apiErrors).toBe(0);
   });
 
-  test("should track unique site requests correctly", () => {
-    jest.isolateModules(() => {
-      const metrics = require("../../src/utils/metrics").default;
+  test("should track unique site requests correctly", async () => {
+    const { default: metrics } = await import("../../src/utils/metrics");
 
-      metrics.recordSiteRequest(1001);
-      metrics.recordSiteRequest(1001); // duplicate
-      metrics.recordSiteRequest(1002);
+    metrics.recordSiteRequest(1001);
+    metrics.recordSiteRequest(1001);
+    metrics.recordSiteRequest(1002);
 
-      const stats = metrics.getMetrics();
-      expect(stats.uniqueSiteIds).toBe(2);
-    });
+    const stats = metrics.getMetrics();
+    expect(stats.uniqueSiteIds).toBe(2);
   });
 
-  test("should drop site requests older than 24 hours", () => {
-    jest.isolateModules(() => {
-      const metrics = require("../../src/utils/metrics").default;
+  test("should drop site requests older than 24 hours", async () => {
+    const { default: metrics } = await import("../../src/utils/metrics");
 
-      // Request now
-      metrics.recordSiteRequest(2001);
+    metrics.recordSiteRequest(2001);
+    jest.advanceTimersByTime(25 * 60 * 60 * 1000);
+    metrics.recordSiteRequest(2002);
 
-      // Advance time by 25 hours
-      jest.advanceTimersByTime(25 * 60 * 60 * 1000);
-
-      // New request
-      metrics.recordSiteRequest(2002);
-
-      const stats = metrics.getMetrics();
-      // Only 2002 should be counted as recent
-      expect(stats.uniqueSiteIds).toBe(1);
-    });
+    const stats = metrics.getMetrics();
+    expect(stats.uniqueSiteIds).toBe(1);
   });
 
-  test("should maintain 24-hour rolling bucket sums", () => {
-    jest.isolateModules(() => {
-      const metrics = require("../../src/utils/metrics").default;
+  test("should maintain 24-hour rolling bucket sums", async () => {
+    const { default: metrics } = await import("../../src/utils/metrics");
 
-      // Hour 1
-      metrics.recordStat("apiRequests");
+    metrics.recordStat("apiRequests");
+    jest.advanceTimersByTime(1 * 60 * 60 * 1000);
+    metrics.recordStat("apiRequests");
+    metrics.recordStat("apiRequests");
 
-      // Advance 1 hour
-      jest.advanceTimersByTime(1 * 60 * 60 * 1000);
+    let stats = metrics.getMetrics();
+    expect(stats.apiRequests).toBe(3);
 
-      // Hour 2
-      metrics.recordStat("apiRequests");
-      metrics.recordStat("apiRequests");
+    jest.advanceTimersByTime(24 * 60 * 60 * 1000);
 
-      let stats = metrics.getMetrics();
-      // 1 from Hour 1 + 2 from Hour 2
-      expect(stats.apiRequests).toBe(3);
-
-      // Advance 24 hours to push Hour 1 and Hour 2 out of the window
-      jest.advanceTimersByTime(24 * 60 * 60 * 1000);
-
-      stats = metrics.getMetrics();
-      // Buckets should have rolled out
-      expect(stats.apiRequests).toBe(0);
-    });
+    stats = metrics.getMetrics();
+    expect(stats.apiRequests).toBe(0);
   });
 });
