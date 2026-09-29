@@ -5,4 +5,5 @@ module.exports = {
     "^.+\\.ts?$": "ts-jest",
   },
   setupFiles: ["./setupJest.ts"],
+  forceExit: true,
 };
