@@ -141,6 +141,8 @@ describe("realtimeDeparturesService", () => {
   });
 
   test("findNextDeparture rejects requests when queue depth exceeds MAX_QUEUE_DEPTH", async () => {
+    jest.useFakeTimers();
+    
     const requests = [];
 
     for (let i = 0; i < 101; i++) {
