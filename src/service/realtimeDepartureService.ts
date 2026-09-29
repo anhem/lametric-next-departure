@@ -3,6 +3,7 @@ import { NextDepartureRequest } from "../model/NextDepartureRequest";
 import { getRealtimeDepartures } from "../client/realtimeDeparturesClient";
 import logger from "../logger";
 import { Departure, Departures } from "../client/model/Departures";
+import metrics from "../utils/metrics";
 
 const TEN_MINUTES = 600000;
 const ONE_HOUR = 3600000;
@@ -17,6 +18,7 @@ const MAX_QUEUE_DEPTH = 100;
 export async function findNextDeparture(
   nextDepartureRequest: NextDepartureRequest
 ) {
+  metrics.recordStat("incomingRequests");
   const responseData = await getDepartures(nextDepartureRequest.siteId);
   logger.debug(`got departures ${JSON.stringify(responseData)}`);
   const departuresForTransportMode = extractTransportModeDepartures(
@@ -38,19 +40,23 @@ export async function findNextDeparture(
 }
 
 async function getDepartures(siteId: number): Promise<Departure[]> {
+  metrics.recordSiteRequest(siteId);
   const cachedDepartures: Departures = departureCache.get(siteId);
   if (cachedDepartures !== null) {
     logger.debug(`Found cached response for key ${siteId}`);
+    metrics.recordStat("cacheHits");
     return cachedDepartures.departures;
   }
 
   if (pendingRequests.has(siteId)) {
     logger.debug(`Found pending request for key ${siteId}`);
+    metrics.recordStat("cacheHits");
     const departures = await pendingRequests.get(siteId);
     return departures.departures || [];
   }
 
   if (queueDepth >= MAX_QUEUE_DEPTH) {
+    metrics.recordStat("queueRejections");
     logger.warn(`Rejected request for siteId ${siteId}: Server Too Busy. Queue depth: ${queueDepth}`);
     throw new Error("Server Too Busy: outbound queue at maximum capacity");
   }
@@ -59,6 +65,7 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
     globalRequestQueue = globalRequestQueue
       .then(async () => {
         await new Promise((r) => setTimeout(r, 200));
+        metrics.recordStat("apiRequests");
         return getRealtimeDepartures(siteId);
       })
       .then(resolve)
@@ -69,6 +76,7 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
   try {
     const departures: Departures = await promise;
     if (departures && departures.departures) {
+      metrics.recordStat("apiSuccesses");
       departureCache.put(siteId, departures, TEN_MINUTES);
       staleCache.put(siteId, departures, ONE_HOUR);
       logger.info(
@@ -76,18 +84,22 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
       );
       return departures.departures;
     } else {
+      metrics.recordStat("apiErrors");
       logger.error(`Invalid API response: ${JSON.stringify(departures)}`);
       const stale = staleCache.get(siteId);
       if (stale) {
+        metrics.recordStat("staleCacheHits");
         logger.warn(`Serving stale data for ${siteId} due to invalid response`);
         return stale.departures;
       }
       return [];
     }
   } catch (error) {
+    metrics.recordStat("apiErrors");
     logger.error(`Fetch failed for ${siteId}: ${(error as Error).message}`);
     const stale = staleCache.get(siteId);
     if (stale) {
+      metrics.recordStat("staleCacheHits");
       logger.warn(`Serving stale data for ${siteId} due to fetch error`);
       return stale.departures;
     }

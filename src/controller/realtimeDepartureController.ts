@@ -4,6 +4,7 @@ import {
   toNextDepartureRequest,
 } from "../model/NextDepartureRequest";
 import { findNextDeparture } from "../service/realtimeDepartureService";
+import metrics from "../utils/metrics";
 import { createError, createResponse } from "../service/laMetricService";
 import logger from "../logger";
 import { NextDepartureResponse } from "../model/NextDepartureResponse";
@@ -34,6 +35,16 @@ export async function getNextDeparture(req, res) {
     const nextDepartureResponse = createError(INVALID_REQUEST, undefined);
     res.json(nextDepartureResponse);
     logWarn(nextDepartureRequest, nextDepartureResponse);
+  }
+}
+
+export function getStats(req, res) {
+  try {
+    const stats = metrics.getMetrics();
+    res.json(stats);
+  } catch (error) {
+    logger.error(`Failed to get stats: ${error.message}`);
+    res.status(500).json({ error: "Failed to retrieve stats" });
   }
 }
 
