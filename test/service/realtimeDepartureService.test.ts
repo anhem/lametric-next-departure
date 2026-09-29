@@ -19,7 +19,8 @@ describe("realtimeDeparturesService", () => {
   beforeEach(() => {
     fetchMock.resetMocks();
     fetchMock.mockResponse(JSON.stringify(departures));
-    jest.useFakeTimers().setSystemTime(new Date("2024-10-02T18:37:00"));
+    jest.useFakeTimers({ doNotFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'setImmediate', 'clearImmediate'] })
+      .setSystemTime(new Date("2024-10-02T18:37:00"));
   });
 
   test("findNextDeparture returns departure", async () => {
@@ -99,7 +100,8 @@ describe("realtimeDeparturesService", () => {
   });
 
   test("findNextDeparture returns no departure", async () => {
-    jest.useFakeTimers().setSystemTime(new Date("2024-11-02T00:00:00"));
+    jest.useFakeTimers({ doNotFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'setImmediate', 'clearImmediate'] })
+      .setSystemTime(new Date("2024-11-02T00:00:00"));
     const nextDeparture = await findNextDeparture(nextDepartureRequest);
     expect(nextDeparture).toEqual(NO_DEPARTURES);
   });
@@ -107,7 +109,7 @@ describe("realtimeDeparturesService", () => {
   test("findNextDeparture deduplicates simultaneous requests for the same siteId", async () => {
     const request1: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9991 };
     const request2: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9991 };
-    
+
     const [result1, result2] = await Promise.all([
       findNextDeparture(request1),
       findNextDeparture(request2),
@@ -115,7 +117,7 @@ describe("realtimeDeparturesService", () => {
 
     expect(result1).toEqual(["0 min"]);
     expect(result2).toEqual(["0 min"]);
-    
+
     const fetchCallsForSite = fetchMock.mock.calls.filter(call => (call[0] as string).includes("sites/9991"));
     expect(fetchCallsForSite.length).toBe(1);
   });
@@ -123,7 +125,7 @@ describe("realtimeDeparturesService", () => {
   test("findNextDeparture does not deduplicate simultaneous requests for different siteIds", async () => {
     const request1: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9992 };
     const request2: NextDepartureRequest = { ...nextDepartureRequest, siteId: 9993 };
-    
+
     const [result1, result2] = await Promise.all([
       findNextDeparture(request1),
       findNextDeparture(request2),
@@ -131,10 +133,21 @@ describe("realtimeDeparturesService", () => {
 
     expect(result1).toEqual(["0 min"]);
     expect(result2).toEqual(["0 min"]);
-    
+
     const fetchCallsForSite2 = fetchMock.mock.calls.filter(call => (call[0] as string).includes("sites/9992"));
     const fetchCallsForSite3 = fetchMock.mock.calls.filter(call => (call[0] as string).includes("sites/9993"));
     expect(fetchCallsForSite2.length).toBe(1);
     expect(fetchCallsForSite3.length).toBe(1);
+  });
+
+  test("findNextDeparture rejects requests when queue depth exceeds MAX_QUEUE_DEPTH", async () => {
+    const requests = [];
+
+    for (let i = 0; i < 101; i++) {
+      const request: NextDepartureRequest = { ...nextDepartureRequest, siteId: 2000 + i };
+      requests.push(findNextDeparture(request));
+    }
+
+    await expect(Promise.all(requests)).rejects.toThrow("Server Too Busy: outbound queue at maximum capacity");
   });
 });

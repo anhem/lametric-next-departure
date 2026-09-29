@@ -16,7 +16,8 @@ describe("realtimeDeparturesController", () => {
 
   beforeEach(() => {
     fetchMock.resetMocks();
-    jest.useFakeTimers().setSystemTime(new Date("2024-10-02T18:37:00"));
+    jest.useFakeTimers({ doNotFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'setImmediate', 'clearImmediate'] })
+      .setSystemTime(new Date("2024-10-02T18:37:00"));
   });
 
   test("getNextDeparture responds with invalid request when request is empty", async () => {

@@ -8,6 +8,9 @@ const TEN_MINUTES = 600000;
 export const NO_DEPARTURES: string[] = ["?"];
 const departureCache = new cache.Cache();
 const pendingRequests = new Map<number, Promise<Departures>>();
+let globalRequestQueue = Promise.resolve();
+let queueDepth = 0;
+const MAX_QUEUE_DEPTH = 100;
 
 export async function findNextDeparture(
   nextDepartureRequest: NextDepartureRequest
@@ -42,20 +45,39 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
   if (pendingRequests.has(siteId)) {
     logger.debug(`Found pending request for key ${siteId}`);
     const departures = await pendingRequests.get(siteId);
-    return departures.departures;
+    return departures.departures || [];
   }
 
-  const promise = getRealtimeDepartures(siteId);
+  if (queueDepth >= MAX_QUEUE_DEPTH) {
+    logger.warn(`Rejected request for siteId ${siteId}: Server Too Busy. Queue depth: ${queueDepth}`);
+    throw new Error("Server Too Busy: outbound queue at maximum capacity");
+  }
+  queueDepth++;
+  const promise = new Promise<Departures>((resolve, reject) => {
+    globalRequestQueue = globalRequestQueue
+      .then(async () => {
+        await new Promise((r) => setTimeout(r, 200));
+        return getRealtimeDepartures(siteId);
+      })
+      .then(resolve)
+      .catch(reject);
+  });
   pendingRequests.set(siteId, promise);
 
   try {
     const departures: Departures = await promise;
-    departureCache.put(siteId, departures, TEN_MINUTES);
-    logger.info(
-      `Added ${siteId} to departureCache. Current size ${departureCache.size()}`
-    );
-    return departures.departures;
+    if (departures && departures.departures) {
+      departureCache.put(siteId, departures, TEN_MINUTES);
+      logger.info(
+        `Added ${siteId} to departureCache. Current size ${departureCache.size()}`
+      );
+      return departures.departures;
+    } else {
+      logger.error(`Invalid API response: ${JSON.stringify(departures)}`);
+      return [];
+    }
   } finally {
+    queueDepth--;
     pendingRequests.delete(siteId);
   }
 }
