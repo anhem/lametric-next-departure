@@ -5,8 +5,10 @@ import logger from "../logger";
 import { Departure, Departures } from "../client/model/Departures";
 
 const TEN_MINUTES = 600000;
+const ONE_HOUR = 3600000;
 export const NO_DEPARTURES: string[] = ["?"];
 const departureCache = new cache.Cache();
+const staleCache = new cache.Cache();
 const pendingRequests = new Map<number, Promise<Departures>>();
 let globalRequestQueue = Promise.resolve();
 let queueDepth = 0;
@@ -68,14 +70,28 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
     const departures: Departures = await promise;
     if (departures && departures.departures) {
       departureCache.put(siteId, departures, TEN_MINUTES);
+      staleCache.put(siteId, departures, ONE_HOUR);
       logger.info(
         `Added ${siteId} to departureCache. Current size ${departureCache.size()}`
       );
       return departures.departures;
     } else {
       logger.error(`Invalid API response: ${JSON.stringify(departures)}`);
+      const stale = staleCache.get(siteId);
+      if (stale) {
+        logger.warn(`Serving stale data for ${siteId} due to invalid response`);
+        return stale.departures;
+      }
       return [];
     }
+  } catch (error) {
+    logger.error(`Fetch failed for ${siteId}: ${(error as Error).message}`);
+    const stale = staleCache.get(siteId);
+    if (stale) {
+      logger.warn(`Serving stale data for ${siteId} due to fetch error`);
+      return stale.departures;
+    }
+    throw error;
   } finally {
     queueDepth--;
     pendingRequests.delete(siteId);
