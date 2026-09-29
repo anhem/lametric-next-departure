@@ -1,11 +1,12 @@
-FROM node:23-alpine3.20 as builder
+FROM node:24.21.0-alpine3.23 as builder
 
 WORKDIR /build
 COPY . .
 RUN npm install
 RUN npm run build
+RUN npm prune --omit=dev
 
-FROM node:23-alpine3.20 as runtime
+FROM node:24.21.0-alpine3.23 as runtime
 
 ENV TZ=Europe/Stockholm
 
