@@ -14,6 +14,7 @@ const pendingRequests = new Map<number, Promise<Departures>>();
 let globalRequestQueue = Promise.resolve();
 let queueDepth = 0;
 const MAX_QUEUE_DEPTH = 100;
+const REQUEST_DELAY_MS = parseInt(process.env.REQUEST_DELAY_MS ?? "500", 10);
 
 export async function findNextDeparture(
   nextDepartureRequest: NextDepartureRequest
@@ -64,7 +65,7 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
   const promise = new Promise<Departures>((resolve, reject) => {
     globalRequestQueue = globalRequestQueue
       .then(async () => {
-        await new Promise((r) => setTimeout(r, 200));
+        await new Promise((r) => setTimeout(r, REQUEST_DELAY_MS));
         metrics.recordStat("apiRequests");
         return getRealtimeDepartures(siteId);
       })
