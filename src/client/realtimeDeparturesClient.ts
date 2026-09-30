@@ -12,6 +12,9 @@ export async function getRealtimeDepartures(
     const url = `${BASE_URL}/sites/${siteId}/departures?forecast=${FORECAST}`;
     logger.debug(`Fetching realtime departures from ${url}`);
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText}`);
+    }
     const json = await response.json();
     logger.debug(
       `Got realtime departures response for ${siteId} as ${JSON.stringify(

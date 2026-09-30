@@ -77,7 +77,7 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
 
   try {
     const departures: Departures = await promise;
-    if (departures && departures.departures) {
+    if (departures?.departures) {
       metrics.recordStat("apiSuccesses");
       departureCache.put(siteId, departures, TEN_MINUTES);
       staleCache.put(siteId, departures, ONE_HOUR);
@@ -85,33 +85,25 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
         `Added ${siteId} to departureCache. Current size ${departureCache.size()}`
       );
       return departures.departures;
-    } else {
-      metrics.recordStat("apiErrors");
-      logger.error(`Invalid API response: ${JSON.stringify(departures)}`);
-      const stale = staleCache.get(siteId);
-      if (stale) {
-        metrics.recordStat("staleCacheHits");
-        logger.warn(`Serving stale data for ${siteId} due to invalid response`);
-        departureCache.put(siteId, stale, TWO_MINUTES);
-        return stale.departures;
-      }
-      return [];
     }
+    logger.error(`Invalid API response: ${JSON.stringify(departures)}`);
   } catch (error) {
-    metrics.recordStat("apiErrors");
     logger.error(`Fetch failed for ${siteId}: ${(error as Error).message}`);
-    const stale = staleCache.get(siteId);
-    if (stale) {
-      metrics.recordStat("staleCacheHits");
-      logger.warn(`Serving stale data for ${siteId} due to fetch error`);
-      departureCache.put(siteId, stale, TWO_MINUTES);
-      return stale.departures;
-    }
-    throw error;
   } finally {
     queueDepth--;
     pendingRequests.delete(siteId);
   }
+
+  metrics.recordStat("apiErrors");
+  const stale: Departures = staleCache.get(siteId);
+  if (stale) {
+    metrics.recordStat("staleCacheHits");
+    logger.warn(`Serving stale data for ${siteId}`);
+    departureCache.put(siteId, stale, TWO_MINUTES);
+    return stale.departures;
+  }
+  departureCache.put(siteId, { departures: [] }, TWO_MINUTES);
+  return [];
 }
 
 function extractTransportModeDepartures(

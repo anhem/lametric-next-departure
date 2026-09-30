@@ -65,4 +65,14 @@ describe("realtimeDeparturesClient", () => {
       );
     }
   });
+
+  test(`getRealtimeDepartures throws error on HTTP non-ok status`, async () => {
+    fetchMock.mockResponseOnce("Too Many Requests", {
+      status: 429,
+      statusText: "Too Many Requests",
+    });
+    await expect(getRealtimeDepartures(1080)).rejects.toThrow(
+      "Failed to get realtime departures due to HTTP 429 Too Many Requests"
+    );
+  });
 });

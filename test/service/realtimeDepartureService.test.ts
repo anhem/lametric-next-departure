@@ -177,6 +177,25 @@ describe("realtimeDeparturesService", () => {
     expect(fetchCallsForSite.length).toBe(2);
   });
 
+  test("findNextDeparture throttles cold failure retries without stale data", async () => {
+    const coldErrorRequest = { ...nextDepartureRequest, siteId: 6666 };
+
+    fetchMock.mockRejectOnce(new Error("Not Found"));
+
+    // Cold failure returns NO_DEPARTURES (no stale data available)
+    const result1 = await findNextDeparture(coldErrorRequest);
+    expect(result1).toEqual(NO_DEPARTURES);
+
+    // Immediate second call should be served from cache (empty departures) without calling fetch again
+    const result2 = await findNextDeparture(coldErrorRequest);
+    expect(result2).toEqual(NO_DEPARTURES);
+
+    const fetchCallsForSite = fetchMock.mock.calls.filter((call) =>
+      (call[0] as string).includes("sites/6666")
+    );
+    expect(fetchCallsForSite.length).toBe(1);
+  });
+
   test("findNextDeparture rejects requests when queue depth exceeds MAX_QUEUE_DEPTH", async () => {
     jest.useFakeTimers();
     

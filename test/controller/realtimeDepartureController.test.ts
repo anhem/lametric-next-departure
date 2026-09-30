@@ -51,7 +51,7 @@ describe("realtimeDeparturesController", () => {
     });
   });
 
-  test("getNextDeparture responds with Error when unable to fetch departure data", async () => {
+  test("getNextDeparture responds with no departure when unable to fetch departure data", async () => {
     fetchMock.mockRejectedValue("");
     const req = {
       query: { ...query, "site-id": 10801080 },
@@ -63,7 +63,7 @@ describe("realtimeDeparturesController", () => {
     await getNextDeparture(req, res);
 
     expect(res.json).toHaveBeenCalledWith({
-      frames: [{ icon: TRAIN_ICON, index: 0, text: ERROR }],
+      frames: [{ icon: TRAIN_ICON, index: 0, text: "?" }],
     });
   });
 });
