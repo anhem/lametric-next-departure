@@ -5,6 +5,7 @@ import logger from "../logger";
 import { Departure, Departures } from "../client/model/Departures";
 import metrics from "../utils/metrics";
 
+const TWO_MINUTES = 120000;
 const TEN_MINUTES = 600000;
 const ONE_HOUR = 3600000;
 export const NO_DEPARTURES: string[] = ["?"];
@@ -91,6 +92,7 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
       if (stale) {
         metrics.recordStat("staleCacheHits");
         logger.warn(`Serving stale data for ${siteId} due to invalid response`);
+        departureCache.put(siteId, stale, TWO_MINUTES);
         return stale.departures;
       }
       return [];
@@ -102,6 +104,7 @@ async function getDepartures(siteId: number): Promise<Departure[]> {
     if (stale) {
       metrics.recordStat("staleCacheHits");
       logger.warn(`Serving stale data for ${siteId} due to fetch error`);
+      departureCache.put(siteId, stale, TWO_MINUTES);
       return stale.departures;
     }
     throw error;

@@ -154,6 +154,29 @@ describe("realtimeDeparturesService", () => {
     expect(staleDeparture).toEqual(["2 min"]);
   });
 
+  test("findNextDeparture avoids retry storm by temporarily caching stale data on API failure", async () => {
+    const staleRequest = { ...nextDepartureRequest, siteId: 7777 };
+
+    const initialDeparture = await findNextDeparture(staleRequest);
+    expect(initialDeparture).toEqual(["0 min"]);
+
+    jest.advanceTimersByTime(15 * 60 * 1000);
+
+    fetchMock.mockRejectOnce(new Error("Quota Exceeded"));
+
+    const staleDeparture = await findNextDeparture(staleRequest);
+    expect(staleDeparture).toEqual(["2 min"]);
+
+    // Subsequent request within 2 minutes should be served from cache without an extra fetch
+    const cachedStaleDeparture = await findNextDeparture(staleRequest);
+    expect(cachedStaleDeparture).toEqual(["2 min"]);
+
+    const fetchCallsForSite = fetchMock.mock.calls.filter((call) =>
+      (call[0] as string).includes("sites/7777")
+    );
+    expect(fetchCallsForSite.length).toBe(2);
+  });
+
   test("findNextDeparture rejects requests when queue depth exceeds MAX_QUEUE_DEPTH", async () => {
     jest.useFakeTimers();
     

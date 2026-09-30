@@ -18,6 +18,9 @@ describe("realtimeDeparturesClient", () => {
 
     const response: Departures = await getRealtimeDepartures(1080);
 
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://transport.integration.sl.se/v1/sites/1080/departures?forecast=60"
+    );
     expect(response.departures).toHaveLength(93);
     const departure = response.departures[0];
     expect(departure.destination).toEqual("Svartbäcken");
